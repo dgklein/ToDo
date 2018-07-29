@@ -13,13 +13,19 @@ class ToDoVC: UITableViewController {
     
 var itemArray = [Item]()
 
+var selectedCategory: Category? {
+    didSet{
+        loadItems()
+    }
+}
     let dataFilePath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)
+    
    let context = (UIApplication.shared.delegate as! AppDelegate).persistentContainer.viewContext
     
     override func viewDidLoad() {
         super.viewDidLoad()
         print(dataFilePath)
-        loadItems()
+       
     }
     
     //MARK: - Model Manipulation Methods
@@ -32,14 +38,22 @@ var itemArray = [Item]()
     self.tableView.reloadData()
     }
     
+    func loadItems(with request: NSFetchRequest<Item> = Item.fetchRequest(), predicate: NSPredicate? = nil) {
+        //instead of loading ALL items - need selectedCategory now
+        let categoryPredicate = NSPredicate(format: "parentCategory.name MATCHES %@", selectedCategory!.name!)
+//making sure it's not nil - GO OVER!!!
+        if let additionalPredicate = predicate {
+          request.predicate = NSCompoundPredicate(andPredicateWithSubpredicates: [categoryPredicate, additionalPredicate])
+        } else {
+            request.predicate = categoryPredicate
+        }
     
-    func loadItems() {
-        let request: NSFetchRequest<Item> = Item.fetchRequest()
         do {
         itemArray = try context.fetch(request)
         } catch {
             print("Could not fetch data \(error)")
         }
+        tableView.reloadData()
     }
     
     //MARK: - Tableview Datasource Methods
@@ -57,6 +71,7 @@ var itemArray = [Item]()
         
         return cell
     }
+    
     //MARK: - TableView Delegates
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         itemArray[indexPath.row].done = !itemArray[indexPath.row].done
@@ -64,12 +79,6 @@ var itemArray = [Item]()
        print(itemArray[indexPath.row])
         tableView.deselectRow(at: indexPath, animated: true)
         tableView.reloadData()
-    }
-    
-
-    override func didReceiveMemoryWarning() {
-        super.didReceiveMemoryWarning()
-  
     }
 
     //MARK: - Add New Items
@@ -81,6 +90,7 @@ var itemArray = [Item]()
             let newItem = Item(context: self.context)
             newItem.title = textField.text!
             newItem.done = false
+            newItem.parentCategory = self.selectedCategory
             self.itemArray.append(newItem)
             self.saveItems()
         }
@@ -97,25 +107,32 @@ var itemArray = [Item]()
 
 //MARK: - Searchbar methods
 extension ToDoVC: UISearchBarDelegate {
-    
     func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
         let request: NSFetchRequest<Item> = Item.fetchRequest()
-        
-        let predicate = NSPredicate(format: "title CONTAINS[cd] %@", searchBar.text!)
-        
+        let predicate = NSPredicate(format: "title CONTAINS[cd]%@", searchBar.text!)
         //add query to request
         request.predicate = predicate
-        
         //sort data
         let sortDescriptor = NSSortDescriptor(key: "title", ascending: true)
-        
         request.sortDescriptors = [sortDescriptor]
         
-        do {
-            itemArray = try context.fetch(request)
-        } catch {
-            print("Could not fetch data \(error)")
+        loadItems(with: request, predicate: predicate)
+    }
+    
+    func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
+        if searchBar.text?.count == 0 {
+            loadItems()
+            DispatchQueue.main.async {
+            searchBar.resignFirstResponder()
+            
         }
-        tableView.reloadData()
     }
 }
+    
+}
+
+
+
+
+
+
