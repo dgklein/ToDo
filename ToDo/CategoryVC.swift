@@ -1,10 +1,10 @@
 //OVERVIEW OF STEPS
-//    Set up array of items
-//    tap into context
+//    Set up array of categoryItems
+//    tap into the context
 //    set up tableview to load the data from the context
-//    Use ibaction addbuttonpressed to add new items into the tableview - to add new categories
+//    Use ibaction addbuttonpressed to add new Categories into the tableview - to add new categories
 //    use saveItems to persist our items inside our container in data manipulation
-//    load those items from persistent container using context under data manipulation
+//    load those items from persistent container using our context under data manipulation
 //
 //  Created by Dara Klein on 7/23/18.
 //  Copyright © 2018 Dara Klein. All rights reserved.
