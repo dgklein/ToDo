@@ -10,14 +10,13 @@
 //  Copyright © 2018 Dara Klein. All rights reserved.
 
 import UIKit
-import CoreData
+import RealmSwift
 
 class CategoryVC: UITableViewController {
     
-    var categoryArray = [Category]()
- 
-    let context = (UIApplication.shared.delegate as! AppDelegate).persistentContainer.viewContext
+    let realm = try! Realm()
     
+    var categories: Results<Category>?
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -28,15 +27,18 @@ print(FileManager.default.urls(for: .documentDirectory, in: .userDomainMask))
 // MARK: - Table view data source
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         
-        return categoryArray.count
+        //nil coalescing Operator
+        return categories?.count ?? 1
+        
     }
 
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let category = categoryArray[indexPath.row]
+        
+        //let category = categories![indexPath.row]
         
         let cell = tableView.dequeueReusableCell(withIdentifier: "categoryCell", for: indexPath)
 
-        cell.textLabel?.text = category.name
+        cell.textLabel?.text = categories?[indexPath.row].name ?? "No Categories Added"
         
         //then render on screen
         return cell
@@ -50,32 +52,32 @@ override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: Inde
     }
     
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
-        
-        //MAKE NOTE OF:
+        //MAKE NOTE OF
         let destinationVC = segue.destination as! ToDoVC
         //optional - add if let for when it's not nil
+        
         if let indexPath = tableView.indexPathForSelectedRow {
-       //create property inside ToDoVC
-        destinationVC.selectedCategory = categoryArray[indexPath.row]
+       //create property inside ToDoVC 
+        destinationVC.selectedCategory = categories?[indexPath.row]
         }
     }
 
 //MARK: - Data Manipulation Methods
+    
     func loadData() {
-        let request:NSFetchRequest<Category> = Category.fetchRequest()
-        do {
-           categoryArray = try context.fetch(request)
-        } catch {
-            print("Error fetching data \(error)")
-        }
+    //pull out all category objs out of realm
+        categories = realm.objects(Category.self)
+      
         tableView.reloadData()
     }
     
-    func saveData() {
+    func save(category: Category) {
         do {
-        try context.save()
+            try realm.write {
+                realm.add(category)
+            }
         } catch {
-            print("Error saving data \(error)")
+            print("Error saving category \(error)")
         }
         tableView.reloadData()
     }
@@ -94,13 +96,11 @@ override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: Inde
     let action = UIAlertAction(title: "Add", style: .default) { (action) in
 //what happens when you press + //Configure array and db
        
-        let newCategory = Category(context: self.context)
-        
+        let newCategory = Category()
+    
         newCategory.name = textField.text!
-        
-        self.categoryArray.append(newCategory)
-        
-        self.saveData()
+    
+        self.save(category: newCategory)
        
     }
     
