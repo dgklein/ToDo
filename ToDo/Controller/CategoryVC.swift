@@ -106,10 +106,14 @@ override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: Inde
     
     //GO OVER - Configure Textfield placeholder and assign to textfield refs
    alert.addAction(action)
+    
     alert.addAction(action2)
+    
     alert.addTextField { (alertTextField) in
+        
         alertTextField.placeholder = "Create New Category"
-    textField = alertTextField
+    
+        textField = alertTextField
     }
 
     present(alert, animated: true, completion: nil)

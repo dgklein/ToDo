@@ -5,13 +5,14 @@
 //  Created by Dara Klein on 7/22/18.
 //  Copyright © 2018 Dara Klein. All rights reserved.
 //
-
 import UIKit
 import RealmSwift
 
 class ToDoVC: UITableViewController {
 
 var toDoItems: Results<Item>?
+    
+//var currentDate = Date() - didn't need to create ref.
 
 let realm = try! Realm()
 
@@ -19,6 +20,7 @@ var selectedCategory: Category? {
     didSet {
         loadItems()
     }
+    
 }
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -58,11 +60,14 @@ toDoItems = selectedCategory?.items.sorted(byKeyPath: "title", ascending: true)
     
     //MARK: - TableView Delegates
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+       
         if let item = toDoItems?[indexPath.row] {
             do {
             try realm.write {
+                //add whatever changes to item you want to make in db
                 //realm.delete(item)
                 item.done = !item.done
+              
             }
         } catch {
             print("Error saving done status \(error)")
@@ -79,12 +84,15 @@ toDoItems = selectedCategory?.items.sorted(byKeyPath: "title", ascending: true)
         let alert = UIAlertController(title: "Add New Item", message: "", preferredStyle: .alert)
         let action = UIAlertAction(title: "Add Item", style: .default) { (action) in
             //what happens after button is pressed
-            
+            //Go over "Fetching Data in Realm 15:31
             if let currentCategory = self.selectedCategory {
                 do {
                     try self.realm.write {
+                    //new obj
                     let newItem = Item()
                     newItem.title = textField.text!
+                    newItem.dateCreated = Date()
+                        
                     currentCategory.items.append(newItem)
                 }
                 } catch {
@@ -104,22 +112,23 @@ toDoItems = selectedCategory?.items.sorted(byKeyPath: "title", ascending: true)
     }
     
 }
-
 //MARK: - Searchbar methods
 extension ToDoVC: UISearchBarDelegate {
     func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
-        toDoItems = toDoItems?.filter("title CONTAINS[cd] %@", searchBar.text!).sorted(byKeyPath: "title", ascending: true)
-        
+        toDoItems = toDoItems?.filter("title CONTAINS[cd] %@", searchBar.text!).sorted(byKeyPath: "dateCreated", ascending: true)
+        tableView.reloadData()
     }
-    
+
     func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
         if searchBar.text?.count == 0 {
             loadItems()
+            
             DispatchQueue.main.async {
             searchBar.resignFirstResponder()
             
         }
     }
+        
 }
 
 }
