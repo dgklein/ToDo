@@ -8,7 +8,7 @@
 import UIKit
 import RealmSwift
 
-class ToDoVC: UITableViewController {
+class ToDoVC: SwipeTableViewController {
 
 var toDoItems: Results<Item>?
     
@@ -24,8 +24,8 @@ var selectedCategory: Category? {
 }
     override func viewDidLoad() {
         super.viewDidLoad()
-        
         print(FileManager.default.urls(for: .documentDirectory, in: .userDomainMask))
+        tableView.rowHeight = 72.0
     }
     
     //MARK: - Model Manipulation Methods
@@ -36,6 +36,27 @@ toDoItems = selectedCategory?.items.sorted(byKeyPath: "title", ascending: true)
         tableView.reloadData()
     }
     
+    //MARK: - Delete Data from Swipe
+    
+    override func UpdateModel(at indexPath: IndexPath) {
+        //will contact super and include print statement
+        super.UpdateModel(at: indexPath)
+        
+        if let itemForDeletion = self.toDoItems?[indexPath.row] {
+            do {
+                try self.realm.write {
+                    self.realm.delete(itemForDeletion)
+                }
+            } catch {
+                print("Error deleting item: \(error)")
+            }
+            
+            //tableView.reloadData()
+        }
+    }
+
+    
+    
     //MARK: - Tableview Datasource Methods
     
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
@@ -43,7 +64,9 @@ toDoItems = selectedCategory?.items.sorted(byKeyPath: "title", ascending: true)
     }
     
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let cell = tableView.dequeueReusableCell(withIdentifier: "itemCell", for: indexPath)
+//        let cell = super.tableView.dequeueReusableCell(withIdentifier: "Cell", for: indexPath)
+        
+        let cell = super.tableView(tableView, cellForRowAt: indexPath)
         
         if let item = toDoItems?[indexPath.row] {
     

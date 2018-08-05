@@ -79,6 +79,8 @@ override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: Inde
         }
         tableView.reloadData()
     }
+    
+    
     //MARK: - Delete Data from Swipe
     
 override func UpdateModel(at indexPath: IndexPath) {
